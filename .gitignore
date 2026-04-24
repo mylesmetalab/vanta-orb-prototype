@@ -1,0 +1,27 @@
+node_modules
+dist
+dist-ssr
+*.local
+.vercel
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# Preview server config (local)
+.claude/
+
+# Reference material (copies also live in src/assets and public/fonts)
+_reference/
+/clock.svg
+/x.svg
+/microphone.svg
+/pause.svg
+/midnight-sans-rd-36-bold-pro.otf
+/midnight-sans-rd-36-regular-pro.otf
