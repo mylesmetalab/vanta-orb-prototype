@@ -74,12 +74,15 @@ export function useOrb(canvasRef, paramsRef, audioRef, pauseRef, smallRef) {
       u.uBreathSpeed.value = p.breathSpeed;
       u.uBreathAmt.value = p.breathAmt;
       u.uDrift.value = p.drift;
-      u.uReactSpeed.value = p.reactSpeed ?? 1.0;
-      u.uReactTurb.value = p.reactTurb ?? 1.5;
-      u.uReactSize.value = p.reactSize ?? 0.1;
-      u.uReactBass.value = p.reactBass ?? 0.3;
-      u.uReactRadius.value = p.reactRadius ?? 0.0;
-      u.uReactScale.value = p.reactScale ?? 0.0;
+      // Reactivity per-axis toggles — default enabled (treat missing flag as true)
+      u.uReactSpeed.value = (p.enableReactSpeed ?? true) ? (p.reactSpeed ?? 1.0) : 0;
+      u.uReactTurb.value = (p.enableReactTurb ?? true) ? (p.reactTurb ?? 1.5) : 0;
+      u.uReactSize.value = (p.enableReactSize ?? true) ? (p.reactSize ?? 0.1) : 0;
+      u.uReactBass.value = (p.enableReactBass ?? true) ? (p.reactBass ?? 0.3) : 0;
+      u.uReactRadius.value = (p.enableReactRadius ?? true) ? (p.reactRadius ?? 0.0) : 0;
+      u.uReactScale.value = (p.enableReactScale ?? true) ? (p.reactScale ?? 0.0) : 0;
+      u.uParticleBaseline.value = p.particleBaseline ?? 1.0;
+      u.uReactCount.value = (p.enableReactCount ?? true) ? (p.reactCount ?? 0.0) : 0;
       // Hollow only applies in the idle (large) state so the shrunken orb
       // around the pause button remains dense.
       u.uHollow.value = small ? 0.0 : (p.hollow ?? 0.0);

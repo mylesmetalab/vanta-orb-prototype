@@ -5,6 +5,8 @@ import { useAudio } from "../hooks/useAudio";
 import { fbm } from "../utils/noise";
 import { TUNER_PRESETS } from "../config/presets";
 import DEFAULTS from "../config/orbDefaults.json";
+import { SLIDERS, TUNER_EXTRA_SLIDERS } from "../config/sliderDefs";
+import { saveParams, loadParams, clearParams } from "../config/persist";
 
 const TUNER_DEFAULTS = {
   ...DEFAULTS,
@@ -13,34 +15,41 @@ const TUNER_DEFAULTS = {
   smallAudioScale: 0.35,
 };
 
-const SLIDERS = [
-  { k: "particleCount", label: "Particles", min: 500, max: 6000, step: 100, rb: true },
-  { k: "size", label: "Overall Size", min: 0.3, max: 4, step: 0.1 },
-  { k: "sizeContrast", label: "Size Contrast", min: 1, max: 15, step: 0.5 },
-  { k: "sizeMax", label: "Largest Particle", min: 0.2, max: 3, step: 0.1 },
-  { k: "baseSpeed", label: "Orbit Speed", min: 0.005, max: 0.15, step: 0.002 },
-  { k: "drift", label: "Speed Drift", min: 0, max: 1.5, step: 0.05 },
-  { k: "turbulence", label: "Turbulence", min: 0, max: 0.15, step: 0.002 },
-  { k: "turbFreq", label: "Turb Frequency", min: 0.5, max: 5, step: 0.1 },
-  { k: "turbSpeed", label: "Turb Speed", min: 0, max: 0.3, step: 0.005 },
-  { k: "reactivity", label: "Voice Reactivity (master)", min: 0, max: 4, step: 0.1 },
-  { k: "reactSpeed", label: "→ drives Speed", min: 0, max: 4, step: 0.1 },
-  { k: "reactTurb", label: "→ drives Turbulence", min: 0, max: 4, step: 0.1 },
-  { k: "reactSize", label: "→ drives Size", min: 0, max: 1, step: 0.02 },
-  { k: "reactBass", label: "→ Bass boost", min: 0, max: 2, step: 0.05 },
-  { k: "reactRadius", label: "→ Fly outward (radius)", min: 0, max: 2, step: 0.02 },
-  { k: "reactScale", label: "→ Whole-orb pulse", min: 0, max: 0.6, step: 0.01 },
-  { k: "hollow", label: "Hollow center (idle only)", min: 0, max: 1, step: 0.02 },
-  { k: "smoothing", label: "Audio Smoothing", min: 0.8, max: 0.99, step: 0.005 },
-  { k: "breathSpeed", label: "Breath Speed", min: 0, max: 0.8, step: 0.02 },
-  { k: "breathAmt", label: "Breath Depth", min: 0, max: 0.05, step: 0.001 },
-  { k: "opacity", label: "Opacity", min: 0.3, max: 1, step: 0.05 },
-  { k: "smallSizeScale", label: "Small Size Scale", min: 0.2, max: 1.2, step: 0.05 },
-  { k: "smallAudioScale", label: "Small Audio Scale", min: 0.0, max: 1.0, step: 0.05 },
-  { k: "r", label: "Red", min: 0, max: 1, step: 0.01 },
-  { k: "g", label: "Green", min: 0, max: 1, step: 0.01 },
-  { k: "b", label: "Blue", min: 0, max: 1, step: 0.01 },
-];
+const ALL_SLIDERS = [...SLIDERS, ...TUNER_EXTRA_SLIDERS];
+
+function Toggle({ on, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-pressed={on}
+      style={{
+        width: 28,
+        height: 16,
+        borderRadius: 8,
+        border: "none",
+        cursor: "pointer",
+        background: on ? "#fff" : "#222",
+        position: "relative",
+        flexShrink: 0,
+        marginRight: 8,
+        transition: "background 0.15s",
+      }}
+    >
+      <div
+        style={{
+          width: 12,
+          height: 12,
+          borderRadius: 6,
+          background: on ? "#000" : "#555",
+          position: "absolute",
+          top: 2,
+          left: on ? 14 : 2,
+          transition: "left 0.15s, background 0.15s",
+        }}
+      />
+    </button>
+  );
+}
 
 function Bar({ value, label, color }) {
   return (
@@ -63,7 +72,10 @@ function Bar({ value, label, color }) {
 }
 
 export default function Tuner() {
-  const [params, setParams] = useState({ ...TUNER_DEFAULTS });
+  const [params, setParams] = useState(() => {
+    const stored = loadParams();
+    return stored ? { ...TUNER_DEFAULTS, ...stored } : { ...TUNER_DEFAULTS };
+  });
   const [panelOpen, setPanelOpen] = useState(true);
   const [micActive, setMicActive] = useState(false);
   const [audioLevels, setAudioLevels] = useState({ level: 0, bass: 0, treble: 0 });
@@ -501,28 +513,107 @@ export default function Tuner() {
             </button>
           </div>
 
-          {SLIDERS.map(({ k, label, min, max, step, rb }) => (
-            <div key={k} style={{ marginBottom: 14 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-                <span style={{ color: "#777", fontSize: 10 }}>{label}</span>
-                <span style={{ color: "#444", fontSize: 10, fontFamily: "monospace" }}>
-                  {Number.isInteger(params[k]) ? params[k] : params[k]?.toFixed?.(3)}
-                </span>
+          {ALL_SLIDERS.map(({ k, label, min, max, step, rb, toggle }) => {
+            const on = toggle ? params[toggle] !== false : true;
+            return (
+              <div key={k} style={{ marginBottom: 14, opacity: on ? 1 : 0.4 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
+                  <div style={{ display: "flex", alignItems: "center", flex: 1 }}>
+                    {toggle && (
+                      <Toggle
+                        on={on}
+                        onClick={() => setParams((p) => ({ ...p, [toggle]: !on }))}
+                      />
+                    )}
+                    <span style={{ color: "#777", fontSize: 10 }}>{label}</span>
+                  </div>
+                  <span style={{ color: "#444", fontSize: 10, fontFamily: "monospace" }}>
+                    {Number.isInteger(params[k]) ? params[k] : params[k]?.toFixed?.(3)}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={min}
+                  max={max}
+                  step={step}
+                  value={params[k]}
+                  disabled={!on}
+                  onChange={(e) => {
+                    const v = parseFloat(e.target.value);
+                    setParams((p) => ({ ...p, [k]: v }));
+                    if (rb) rebuild(v);
+                  }}
+                />
               </div>
-              <input
-                type="range"
-                min={min}
-                max={max}
-                step={step}
-                value={params[k]}
-                onChange={(e) => {
-                  const v = parseFloat(e.target.value);
-                  setParams((p) => ({ ...p, [k]: v }));
-                  if (rb) rebuild(v);
-                }}
-              />
-            </div>
-          ))}
+            );
+          })}
+
+          {/* Save / Load / Clear localStorage */}
+          <div style={{ display: "flex", gap: 6, marginTop: 12 }}>
+            <button
+              onClick={() => {
+                saveParams(params);
+                setCopyStatus("Saved to localStorage");
+                setTimeout(() => setCopyStatus(""), 1500);
+              }}
+              style={{
+                flex: 1,
+                padding: "8px 0",
+                background: "rgba(80,255,80,0.1)",
+                border: "1px solid rgba(80,255,80,0.25)",
+                borderRadius: 8,
+                color: "#8f8",
+                fontSize: 11,
+                cursor: "pointer",
+              }}
+            >
+              Save
+            </button>
+            <button
+              onClick={() => {
+                const loaded = loadParams();
+                if (loaded) {
+                  setParams(loaded);
+                  if (loaded.particleCount) rebuild(loaded.particleCount);
+                  setCopyStatus("Loaded");
+                } else {
+                  setCopyStatus("Nothing saved");
+                }
+                setTimeout(() => setCopyStatus(""), 1500);
+              }}
+              style={{
+                flex: 1,
+                padding: "8px 0",
+                background: "rgba(100,150,255,0.1)",
+                border: "1px solid rgba(100,150,255,0.25)",
+                borderRadius: 8,
+                color: "#9bf",
+                fontSize: 11,
+                cursor: "pointer",
+              }}
+            >
+              Load
+            </button>
+            <button
+              onClick={() => {
+                clearParams();
+                setCopyStatus("Cleared");
+                setTimeout(() => setCopyStatus(""), 1500);
+              }}
+              style={{
+                flex: 1,
+                padding: "8px 0",
+                background: "rgba(255,255,255,0.02)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                borderRadius: 8,
+                color: "#666",
+                fontSize: 11,
+                cursor: "pointer",
+              }}
+            >
+              Clear
+            </button>
+          </div>
 
           <button
             onClick={copyParams}

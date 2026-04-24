@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import DEFAULTS from "../config/orbDefaults.json";
+import { loadParams } from "../config/persist";
 import { useAudio } from "../hooks/useAudio";
 import { useSpeech } from "../hooks/useSpeech";
 import { useOrb } from "../hooks/useOrb";
@@ -19,7 +20,7 @@ const SIM_TEXT = [
 export default function Prototype() {
   const [state, setState] = useState("idle");
   const [panel, setPanel] = useState(false);
-  const [params, setParams] = useState({ ...DEFAULTS });
+  const [params, setParams] = useState(() => loadParams() || { ...DEFAULTS });
   const [elapsed, setElapsed] = useState(0);
   const [hasMic, setHasMic] = useState(false);
   const [simWords, setSimWords] = useState([]);
@@ -236,44 +237,51 @@ export default function Prototype() {
         onPause={doPause}
         onResume={doResume}
       />
+    </div>
 
-      {/* Settings trigger */}
+      {/* Settings trigger — lives on the outer stage, bottom-right of the
+          white canvas so the mobile frame stays pristine. */}
       <button
         onClick={() => setPanel(true)}
+        title="Open orb settings"
         style={{
-          position: "absolute",
-          bottom: 6,
-          right: 6,
-          width: 28,
-          height: 28,
-          background: "none",
-          border: "none",
+          position: "fixed",
+          bottom: 24,
+          right: 24,
+          width: 44,
+          height: 44,
+          borderRadius: 999,
+          background: "#fff",
+          border: "1px solid rgba(0,0,0,0.08)",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.12)",
           cursor: "pointer",
-          zIndex: 12,
-          opacity: 0.1,
+          zIndex: 200,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          color: "#222",
         }}
       >
-        <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-          <circle cx="10" cy="10" r="3" stroke="#fff" strokeWidth="1.5" />
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <circle cx="10" cy="10" r="3" stroke="#222" strokeWidth="1.5" />
           <path
             d="M8.5 1.5l-.3 1.8a6.5 6.5 0 00-2.3 1.3L4.2 3.8 2.8 6.2l1.5 1.1a6.5 6.5 0 000 2.6l-1.5 1.1 1.4 2.4 1.7-.8a6.5 6.5 0 002.3 1.3l.3 1.8h2.8l.3-1.8a6.5 6.5 0 002.3-1.3l1.7.8 1.4-2.4-1.5-1.1a6.5 6.5 0 000-2.6l1.5-1.1-1.4-2.4-1.7.8a6.5 6.5 0 00-2.3-1.3l-.3-1.8h-2.8z"
-            stroke="#fff"
+            stroke="#222"
             strokeWidth="1.5"
           />
         </svg>
       </button>
 
+      {/* Panel docks to the right edge of the viewport so it doesn't intrude
+          on the mobile frame content. */}
       <SettingsPanel
         params={params}
         setParams={setParams}
         rebuild={rebuild}
         open={panel}
         onClose={() => setPanel(false)}
+        variant="fixed"
       />
-    </div>
     </div>
   );
 }

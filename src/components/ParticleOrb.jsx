@@ -13,6 +13,7 @@ export function makeParticles(count, uniforms) {
   const radii = new Float32Array(count);
   const sizes = new Float32Array(count);
   const drifts = new Float32Array(count);
+  const birthOrders = new Float32Array(count);
 
   for (let i = 0; i < count; i++) {
     inclinations[i] = Math.acos(2 * Math.random() - 1);
@@ -22,6 +23,7 @@ export function makeParticles(count, uniforms) {
     radii[i] = 0.9 + Math.random() * 0.2;
     drifts[i] = Math.random() * 100;
     sizes[i] = Math.random();
+    birthOrders[i] = Math.random();
 
     const phi = Math.acos(1 - 2 * (i + 0.5) / count);
     const theta = Math.PI * (1 + Math.sqrt(5)) * i;
@@ -38,6 +40,7 @@ export function makeParticles(count, uniforms) {
   geo.setAttribute("aRadius", new THREE.BufferAttribute(radii, 1));
   geo.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1));
   geo.setAttribute("aDrift", new THREE.BufferAttribute(drifts, 1));
+  geo.setAttribute("aBirthOrder", new THREE.BufferAttribute(birthOrders, 1));
 
   const u = uniforms || {
     uTime: { value: 0 },
@@ -64,6 +67,8 @@ export function makeParticles(count, uniforms) {
     uReactRadius: { value: DEFAULTS.reactRadius ?? 0.0 },
     uReactScale: { value: DEFAULTS.reactScale ?? 0.0 },
     uHollow: { value: DEFAULTS.hollow ?? 0.0 },
+    uParticleBaseline: { value: DEFAULTS.particleBaseline ?? 1.0 },
+    uReactCount: { value: DEFAULTS.reactCount ?? 0.0 },
   };
 
   const mat = new THREE.ShaderMaterial({

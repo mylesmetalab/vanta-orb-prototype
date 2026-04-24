@@ -20,6 +20,8 @@ uniform float uReactBass;
 uniform float uReactRadius;
 uniform float uReactScale;
 uniform float uHollow;
+uniform float uParticleBaseline;
+uniform float uReactCount;
 
 attribute float aInclination;
 attribute float aNode;
@@ -28,6 +30,7 @@ attribute float aSpeed;
 attribute float aRadius;
 attribute float aSize;
 attribute float aDrift;
+attribute float aBirthOrder;
 
 varying float vAlpha;
 
@@ -83,6 +86,11 @@ void main(){
   float pSize = 0.03 + pow(aSize, uSizeContrast) * uSizeMax;
   gl_PointSize = max(uSize * pSize * atten * depthFade * (1.0 + audio * uReactSize), 0.3);
   vAlpha = 0.75 + depthFade * 0.25;
+  // Voice-driven particle count — baseline fraction always visible,
+  // voice adds up to `uReactCount` more.
+  float visibleThreshold = clamp(uParticleBaseline + audio * uReactCount, 0.0, 1.0);
+  float countFade = 1.0 - smoothstep(visibleThreshold - 0.02, visibleThreshold + 0.02, aBirthOrder);
+  vAlpha *= countFade;
   // Hollow the camera-facing center so the orb reads as a sphere shell.
   // Fade particles whose screen-projected position is near center.
   vec2 ndc = gl_Position.xy / max(gl_Position.w, 0.0001);
