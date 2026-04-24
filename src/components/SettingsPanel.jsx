@@ -86,7 +86,9 @@ export function SettingsPanel({ params, setParams, rebuild, open, onClose, varia
           zIndex: 210,
           overflowY: "auto",
           WebkitOverflowScrolling: "touch",
-          padding: "56px 14px 40px",
+          padding: "20px 16px 40px",
+          fontFamily: "'articulat-cf', system-ui, -apple-system, sans-serif",
+          letterSpacing: 0,
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>

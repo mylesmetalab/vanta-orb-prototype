@@ -318,7 +318,7 @@ export default function Tuner() {
         background: "#000",
         display: "flex",
         overflow: "hidden",
-        fontFamily: "'DM Sans', system-ui, sans-serif",
+        fontFamily: "'articulat-cf', system-ui, -apple-system, sans-serif",
       }}
     >
       {/* Orb area */}
